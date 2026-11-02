@@ -1,0 +1,46 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract project
+        run: |
+          mkdir project
+          unzip -q "*.zip" -d project
+          FILE=$(find project -name pubspec.yaml -print -quit)
+          test -n "$FILE"
+          echo "PROJECT_DIR=$(dirname "$FILE")" >> "$GITHUB_ENV"
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Build APK
+        run: |
+          cd "$PROJECT_DIR"
+          flutter create --platforms=android --org com.mahnashan.pack --project-name mahnashan_pack .
+          flutter pub get
+          flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: mahnashan-pack-apk
+          path: ${{ env.PROJECT_DIR
