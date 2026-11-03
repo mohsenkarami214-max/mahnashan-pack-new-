@@ -4,20 +4,23 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'lib/**'
-      - 'pubspec.yaml'
+      - 'mahnashan_order_catalog/**'
       - '.github/workflows/build.yml'
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: mahnashan_order_catalog
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -37,4 +40,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mahnashan-pack-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: mahnashan_order_catalog/build/app/outputs/flutter-apk/app-release.apk
