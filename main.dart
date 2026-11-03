@@ -1051,3 +1051,119 @@ extension StorePageHelpers on _StorePageState {
     if (mounted) await loadPrices();
   }
 }
+class AdminPage extends StatefulWidget {
+  final List<Product> products;
+  final Map<int, double> currentPrices;
+  final Future<void> Function(int id, double price) onPriceChanged;
+
+  const AdminPage({
+    super.key,
+    required this.products,
+    required this.currentPrices,
+    required this.onPriceChanged,
+  });
+
+  @override
+  State<AdminPage> createState() => _AdminPageState();
+}
+
+class _AdminPageState extends State<AdminPage> {
+  late final Map<int, TextEditingController> controllers;
+
+  @override
+  void initState() {
+    super.initState();
+
+    controllers = {
+      for (final product in widget.products)
+        product.id: TextEditingController(
+          text: (widget.currentPrices[product.id] ?? 0).toStringAsFixed(0),
+        ),
+    };
+  }
+
+  @override
+  void dispose() {
+    for (final controller in controllers.values) {
+      controller.dispose();
+    }
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('مدیریت قیمت محصولات'),
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: widget.products.length,
+        itemBuilder: (context, index) {
+          final product = widget.products[index];
+
+          return Card(
+            color: Colors.white,
+            margin: const EdgeInsets.only(bottom: 12),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: brandDark,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: controllers[product.id],
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'قیمت به تومان',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final price = double.tryParse(
+                          controllers[product.id]!.text.trim(),
+                        );
+
+                        if (price == null || price < 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('قیمت واردشده معتبر نیست.'),
+                            ),
+                          );
+                          return;
+                        }
+
+                        await widget.onPriceChanged(product.id, price);
+
+                        if (!mounted) return;
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('قیمت ذخیره شد.'),
+                          ),
+                        );
+                      },
+                      child: const Text('ذخیره قیمت'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
