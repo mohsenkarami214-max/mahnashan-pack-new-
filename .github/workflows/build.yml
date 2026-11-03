@@ -1,18 +1,40 @@
+name: Build Mahnashan Pack APK
 
-      - 'mahnashan_order_catalog/**'
-      - '.github/workflows/build.yml'
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "lib/**"
+      - "pubspec.yaml"
+      - ".github/workflows/build.yml"
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: mahnashan_order_catalog
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Java
-        uses: actions/
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: mahnashan-pack-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
