@@ -123,8 +123,10 @@ class WelcomePage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text('بسته‌بندی شیک، انتخابی ماندگار',
-                    style: TextStyle(color: Colors.white70, fontSize: 15)),
+                const Text(
+                  'بسته‌بندی شیک، انتخابی ماندگار',
+                  style: TextStyle(color: Colors.white70, fontSize: 15),
+                ),
                 const SizedBox(height: 28),
                 GoldButton(
                   text: 'ورود به فروشگاه',
@@ -163,7 +165,12 @@ class _WelcomeFallback extends StatelessWidget {
 class GoldButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
-  const GoldButton({super.key, required this.text, required this.onPressed});
+
+  const GoldButton({
+    super.key,
+    required this.text,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -171,13 +178,15 @@ class GoldButton extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-                colors: [paleGold, gold, Color(0xFF8A6428)]),
+              colors: [paleGold, gold, Color(0xFF8A6428)],
+            ),
             borderRadius: BorderRadius.circular(15),
             boxShadow: const [
               BoxShadow(
-                  color: Color(0x665E4216),
-                  blurRadius: 15,
-                  offset: Offset(0, 5))
+                color: Color(0x665E4216),
+                blurRadius: 15,
+                offset: Offset(0, 5),
+              )
             ],
           ),
           child: ElevatedButton(
@@ -188,16 +197,20 @@ class GoldButton extends StatelessWidget {
               shadowColor: Colors.transparent,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15)),
+                borderRadius: BorderRadius.circular(15),
+              ),
             ),
-            child: Text(text,
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 16)),
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
           ),
         ),
       );
 }
-
 class StorePage extends StatefulWidget {
   const StorePage({super.key});
 
@@ -265,7 +278,8 @@ class _StorePageState extends State<StorePage> {
             p.code.toLowerCase().contains(search.toLowerCase());
         return matchCategory && matchSearch;
       }).toList();
-    @override
+
+  @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -296,14 +310,31 @@ class _StorePageState extends State<StorePage> {
             ),
           ],
         ),
-        body: IndexedStack(
-          index: tab,
+
+        // پس‌زمینه مشترک صفحات فروشگاه، سبد خرید و تماس
+        body: Stack(
+          fit: StackFit.expand,
           children: [
-            buildHome(),
-            buildCart(),
-            buildContact(),
+            Image.asset(
+              'assets/images/background.png',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  Container(color: bg),
+            ),
+            Container(
+              color: Colors.black.withOpacity(0.72),
+            ),
+            IndexedStack(
+              index: tab,
+              children: [
+                buildHome(),
+                buildCart(),
+                buildContact(),
+              ],
+            ),
           ],
         ),
+
         bottomNavigationBar: NavigationBar(
           backgroundColor: panel,
           indicatorColor: const Color(0x553D2D12),
@@ -525,8 +556,7 @@ class _StorePageState extends State<StorePage> {
           child: Icon(icon, size: 18, color: paleGold),
         ),
       );
-
-  Widget buildCart() {
+    Widget buildCart() {
     final selected = products
         .where((p) => (quantities[p.id] ?? 0) > 0)
         .toList();
@@ -599,7 +629,8 @@ class _StorePageState extends State<StorePage> {
       ],
     );
   }
-    Future<void> copyOrder() async {
+
+  Future<void> copyOrder() async {
     final selected = products
         .where((p) => (quantities[p.id] ?? 0) > 0)
         .toList();
