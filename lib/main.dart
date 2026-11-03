@@ -94,7 +94,7 @@ class WelcomePage extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           Image.asset(
-            'assets/images/welcome.png',
+            'assets/images/welcome-new.png',
             fit: BoxFit.cover,
             errorBuilder: (_, __, ___) => const _WelcomeFallback(),
           ),
