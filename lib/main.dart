@@ -1,4 +1,5 @@
 
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,8 +19,13 @@ class Product {
   int price;
   int quantity;
 
-  Product(this.name, this.category, this.icon,
-      {this.price = 0, this.quantity = 0});
+  Product(
+    this.name,
+    this.category,
+    this.icon, {
+    this.price = 0,
+    this.quantity = 0,
+  });
 }
 
 class MahnashanApp extends StatelessWidget {
@@ -37,14 +43,162 @@ class MahnashanApp extends StatelessWidget {
           seedColor: gold,
           brightness: Brightness.dark,
         ),
-        fontFamily: 'Arial',
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      home: const SplashPage(),
     );
   }
 }
 
+// صفحه شروع برنامه
+class SplashPage extends StatelessWidget {
+  const SplashPage({super.key});
+
+  Widget productPicture(String url, IconData fallback) {
+    return Container(
+      height: 155,
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: gold, width: 1.5),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Image.network(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Icon(fallback, color: gold, size: 55);
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: dark,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(22),
+          child: Column(
+            children: [
+              const Spacer(),
+
+              const Icon(
+                Icons.workspace_premium,
+                color: gold,
+                size: 75,
+              ),
+
+              const SizedBox(height: 12),
+
+              const Text(
+                'ماهنشان پک',
+                style: TextStyle(
+                  color: gold,
+                  fontSize: 34,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              const Text(
+                'بسته‌بندی خاص، کیفیت ماندگار',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 15,
+                ),
+              ),
+
+              const SizedBox(height: 35),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: productPicture(
+                      'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600',
+                      Icons.inventory_2,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: productPicture(
+                      'https://images.unsplash.com/photo-1606755962773-d324e0a13086?w=600',
+                      Icons.lunch_dining,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: productPicture(
+                      'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=600',
+                      Icons.restaurant,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 25),
+
+              const Text(
+                'کاتالوگ محصولات و بسته‌بندی‌های غذایی',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+
+              const Spacer(),
+
+              SizedBox(
+                width: double.infinity,
+                height: 58,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: gold,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const HomePage(),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'ورود به اپلیکیشن',
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              const Text(
+                'MAHNASHAN PACK',
+                style: TextStyle(
+                  color: gold,
+                  letterSpacing: 3,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// صفحه اصلی کاتالوگ
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -80,7 +234,6 @@ class _HomePageState extends State<HomePage> {
     Product('جا لیوانی دسته‌دار', 'آبمیوه و بستنی', Icons.coffee),
   ];
 
-  String selectedCategory = 'همه';
   final List<String> categories = [
     'همه',
     'جعبه‌ها',
@@ -88,6 +241,7 @@ class _HomePageState extends State<HomePage> {
     'آبمیوه و بستنی',
   ];
 
+  String selectedCategory = 'همه';
   bool loading = true;
 
   @override
@@ -98,35 +252,42 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> loadPrices() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      for (int i = 0; i < products.length; i++) {
-        products[i].price = prefs.getInt('price_$i') ?? 0;
-      }
-      loading = false;
-    });
+
+    for (int i = 0; i < products.length; i++) {
+      products[i].price = prefs.getInt('price_$i') ?? 0;
+    }
+
+    if (mounted) {
+      setState(() {
+        loading = false;
+      });
+    }
   }
 
   Future<void> savePrice(int index, int price) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('price_$index', price);
-    setState(() {
-      products[index].price = price;
-    });
+
+    if (mounted) {
+      setState(() {
+        products[index].price = price;
+      });
+    }
   }
 
-  int get total {
-    return products.fold(
-      0,
-      (sum, product) => sum + product.price * product.quantity,
-    );
-  }
+  int get total => products.fold(
+        0,
+        (sum, p) => sum + p.price * p.quantity,
+      );
 
-  int get itemCount {
-    return products.fold(0, (sum, product) => sum + product.quantity);
-  }
+  int get itemCount => products.fold(
+        0,
+        (sum, p) => sum + p.quantity,
+      );
 
   List<Product> get visibleProducts {
     if (selectedCategory == 'همه') return products;
+
     return products
         .where((p) => p.category == selectedCategory)
         .toList();
@@ -142,7 +303,9 @@ class _HomePageState extends State<HomePage> {
   void changeQuantity(Product product, int amount) {
     setState(() {
       product.quantity += amount;
-      if (product.quantity < 0) product.quantity = 0;
+      if (product.quantity < 0) {
+        product.quantity = 0;
+      }
     });
   }
 
@@ -153,8 +316,10 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: cardColor,
-        title: const Text('ورود مدیریت',
-            style: TextStyle(color: gold)),
+        title: const Text(
+          'ورود مدیریت',
+          style: TextStyle(color: gold),
+        ),
         content: TextField(
           controller: controller,
           obscureText: true,
@@ -169,8 +334,9 @@ class _HomePageState extends State<HomePage> {
             child: const Text('انصراف'),
           ),
           ElevatedButton(
-            onPressed: () =>
-                Navigator.pop(context, controller.text),
+            onPressed: () {
+              Navigator.pop(context, controller.text);
+            },
             child: const Text('ورود'),
           ),
         ],
@@ -189,20 +355,21 @@ class _HomePageState extends State<HomePage> {
       );
     } else if (password != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('رمز عبور اشتباه است')),
+        const SnackBar(
+          content: Text('رمز عبور اشتباه است'),
+        ),
       );
     }
   }
 
   void showCart() {
-    final selected =
-        products.where((p) => p.quantity > 0).toList();
+    final selected = products.where((p) => p.quantity > 0).toList();
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: cardColor,
-      builder: (context) => Padding(
+      builder: (sheetContext) => Padding(
         padding: const EdgeInsets.all(18),
         child: SafeArea(
           child: Column(
@@ -217,22 +384,28 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 15),
+
               if (selected.isEmpty)
                 const Padding(
                   padding: EdgeInsets.all(20),
                   child: Text('سبد خرید شما خالی است'),
                 ),
-              ...selected.map((p) => ListTile(
-                    title: Text(p.name),
-                    subtitle: Text(
-                      '${p.quantity} عدد × ${money(p.price)} تومان',
-                    ),
-                    trailing: Text(
-                      '${money(p.price * p.quantity)} تومان',
-                      style: const TextStyle(color: gold),
-                    ),
-                  )),
+
+              ...selected.map(
+                (p) => ListTile(
+                  title: Text(p.name),
+                  subtitle: Text(
+                    '${p.quantity} عدد × ${money(p.price)} تومان',
+                  ),
+                  trailing: Text(
+                    '${money(p.price * p.quantity)} تومان',
+                    style: const TextStyle(color: gold),
+                  ),
+                ),
+              ),
+
               const Divider(color: gold),
+
               Text(
                 'مبلغ کل: ${money(total)} تومان',
                 style: const TextStyle(
@@ -241,7 +414,9 @@ class _HomePageState extends State<HomePage> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+
               const SizedBox(height: 15),
+
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -251,14 +426,17 @@ class _HomePageState extends State<HomePage> {
                       ? null
                       : () async {
                           final text = StringBuffer();
+
                           text.writeln('سلام، سفارش من از ماهنشان پک:');
-                          text.writeln('');
+                          text.writeln();
+
                           for (final p in selected) {
                             text.writeln(
                               '${p.name} - تعداد: ${p.quantity} - قیمت: ${money(p.price * p.quantity)} تومان',
                             );
                           }
-                          text.writeln('');
+
+                          text.writeln();
                           text.writeln(
                             'مبلغ کل: ${money(total)} تومان',
                           );
@@ -268,10 +446,12 @@ class _HomePageState extends State<HomePage> {
                             ClipboardData(text: text.toString()),
                           );
 
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(this.context)
-                                .showSnackBar(
+                          if (sheetContext.mounted) {
+                            Navigator.pop(sheetContext);
+                          }
+
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(
                                   'متن سفارش کپی شد؛ آن را در واتساپ ارسال کنید.',
@@ -282,9 +462,29 @@ class _HomePageState extends State<HomePage> {
                         },
                 ),
               ),
+
               const SizedBox(height: 8),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget quantityButton(IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(30),
+      child: Container(
+        padding: const EdgeInsets.all(5),
+        decoration: BoxDecoration(
+          color: gold,
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Icon(
+          icon,
+          color: Colors.black,
+          size: 18,
         ),
       ),
     );
@@ -315,12 +515,15 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             onPressed: openAdmin,
-            icon: const Icon(Icons.admin_panel_settings,
-                color: gold),
+            icon: const Icon(
+              Icons.admin_panel_settings,
+              color: gold,
+            ),
             tooltip: 'مدیریت',
           ),
         ],
       ),
+
       body: Column(
         children: [
           Container(
@@ -339,8 +542,11 @@ class _HomePageState extends State<HomePage> {
             ),
             child: const Column(
               children: [
-                Icon(Icons.workspace_premium,
-                    color: gold, size: 42),
+                Icon(
+                  Icons.workspace_premium,
+                  color: gold,
+                  size: 42,
+                ),
                 SizedBox(height: 8),
                 Text(
                   'بسته‌بندی خاص، کیفیت ماندگار',
@@ -359,6 +565,7 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
+
           SizedBox(
             height: 48,
             child: ListView(
@@ -366,6 +573,7 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.symmetric(horizontal: 10),
               children: categories.map((category) {
                 final selected = selectedCategory == category;
+
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: ChoiceChip(
@@ -387,7 +595,9 @@ class _HomePageState extends State<HomePage> {
               }).toList(),
             ),
           ),
+
           const SizedBox(height: 8),
+
           Expanded(
             child: GridView.builder(
               padding: const EdgeInsets.all(12),
@@ -401,6 +611,7 @@ class _HomePageState extends State<HomePage> {
               itemCount: visibleProducts.length,
               itemBuilder: (context, index) {
                 final product = visibleProducts[index];
+
                 return Container(
                   decoration: BoxDecoration(
                     color: cardColor,
@@ -428,6 +639,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                       ),
+
                       Text(
                         product.name,
                         textAlign: TextAlign.center,
@@ -438,7 +650,9 @@ class _HomePageState extends State<HomePage> {
                           fontSize: 14,
                         ),
                       ),
+
                       const SizedBox(height: 6),
+
                       Text(
                         product.price == 0
                             ? 'قیمت: تماس بگیرید'
@@ -448,17 +662,21 @@ class _HomePageState extends State<HomePage> {
                           fontSize: 12,
                         ),
                       ),
+
                       const SizedBox(height: 7),
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _quantityButton(
+                          quantityButton(
                             Icons.remove,
                             () => changeQuantity(product, -1),
                           ),
+
                           Padding(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12),
+                              horizontal: 12,
+                            ),
                             child: Text(
                               '${product.quantity}',
                               style: const TextStyle(
@@ -467,7 +685,8 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                           ),
-                          _quantityButton(
+
+                          quantityButton(
                             Icons.add,
                             () => changeQuantity(product, 1),
                           ),
@@ -481,11 +700,14 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(12),
         decoration: const BoxDecoration(
           color: Colors.black,
-          border: Border(top: BorderSide(color: gold)),
+          border: Border(
+            top: BorderSide(color: gold),
+          ),
         ),
         child: SafeArea(
           child: Row(
@@ -507,6 +729,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
+
               ElevatedButton.icon(
                 onPressed: showCart,
                 icon: const Icon(Icons.shopping_cart),
@@ -526,23 +749,9 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-  Widget _quantityButton(IconData icon, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(30),
-      child: Container(
-        padding: const EdgeInsets.all(5),
-        decoration: BoxDecoration(
-          color: gold,
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Icon(icon, color: Colors.black, size: 18),
-      ),
-    );
-  }
 }
 
+// پنل مدیریت قیمت‌ها
 class AdminPage extends StatefulWidget {
   final List<Product> products;
   final Future<void> Function(int, int) onSave;
@@ -592,10 +801,13 @@ class _AdminPageState extends State<AdminPage> {
           ),
           ElevatedButton(
             onPressed: () async {
-              final price =
-                  int.tryParse(controller.text.replaceAll(',', ''));
+              final price = int.tryParse(
+                controller.text.replaceAll(',', ''),
+              );
+
               if (price != null && price >= 0) {
                 await widget.onSave(index, price);
+
                 if (mounted) {
                   setState(() {});
                   Navigator.pop(context);
@@ -619,14 +831,18 @@ class _AdminPageState extends State<AdminPage> {
         ),
         backgroundColor: Colors.black,
       ),
+
       body: ListView.builder(
         itemCount: widget.products.length,
         itemBuilder: (context, index) {
           final product = widget.products[index];
+
           return Card(
             color: cardColor,
             margin: const EdgeInsets.symmetric(
-                horizontal: 12, vertical: 5),
+              horizontal: 12,
+              vertical: 5,
+            ),
             child: ListTile(
               leading: const Icon(
                 Icons.inventory_2,
@@ -640,7 +856,10 @@ class _AdminPageState extends State<AdminPage> {
                 style: const TextStyle(color: gold),
               ),
               trailing: IconButton(
-                icon: const Icon(Icons.edit, color: gold),
+                icon: const Icon(
+                  Icons.edit,
+                  color: gold,
+                ),
                 onPressed: () => editPrice(index),
               ),
             ),
