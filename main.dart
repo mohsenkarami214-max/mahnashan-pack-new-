@@ -1,27 +1,54 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MahnashanPackApp());
-}
+const Color bg = Color(0xFF090909);
+const Color panel = Color(0xE6171513);
+const Color gold = Color(0xFFD6AD55);
+const Color paleGold = Color(0xFFFFE3A0);
 
-// Industrial brand identity
-const Color ink = Color(0xFF20262B);
-const Color ink2 = Color(0xFF303940);
-const Color orange = Color(0xFFFF7626);
-const Color paper = Color(0xFFF3F4F4);
-const Color white = Colors.white;
-const Color muted = Color(0xFF7C858C);
-const Color line = Color(0xFFE1E5E7);
+void main() => runApp(const MahnashanApp());
 
-String money(double value) {
-  return value.toStringAsFixed(0).replaceAllMapped(
-    RegExp(r'\B(?=(\d{3})+(?!\d))'),
-    (m) => ',',
-  );
+class MahnashanApp extends StatelessWidget {
+  const MahnashanApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'ماهنشان پک',
+      theme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: Colors.transparent,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: gold,
+          brightness: Brightness.dark,
+          primary: gold,
+          surface: panel,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xDD090909),
+          foregroundColor: paleGold,
+          centerTitle: true,
+        ),
+      ),
+      builder: (context, child) {
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              'assets/images/background.png',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  Container(color: bg),
+            ),
+            child ?? const SizedBox.shrink(),
+          ],
+        );
+      },
+      home: const WelcomePage(),
+    );
+  }
 }
 
 class Product {
@@ -32,15 +59,10 @@ class Product {
   final String code;
 
   const Product(
-    this.id,
-    this.name,
-    this.category,
-    this.icon,
-    this.code,
-  );
+      this.id, this.name, this.category, this.icon, this.code);
 }
 
-const products = <Product>[
+const List<Product> products = [
   Product(0, 'جعبه تک پرس با سرویس', 'جعبه‌ها', Icons.lunch_dining, 'BOX-01'),
   Product(1, 'جعبه ارکیده', 'جعبه‌ها', Icons.inventory_2, 'BOX-02'),
   Product(2, 'جعبه گلتاج', 'جعبه‌ها', Icons.inventory_2, 'BOX-03'),
@@ -65,29 +87,141 @@ const products = <Product>[
   Product(21, 'جا لیوانی دسته‌دار', 'آبمیوه و بستنی', Icons.local_cafe, 'CUP-03'),
 ];
 
-class MahnashanPackApp extends StatelessWidget {
-  const MahnashanPackApp({super.key});
+String toman(int value) {
+  final s = value.toString();
+  final out = StringBuffer();
+  for (int i = 0; i < s.length; i++) {
+    out.write(s[i]);
+    final left = s.length - i - 1;
+    if (left > 0 && left % 3 == 0) out.write(',');
+  }
+  return '${out.toString()} تومان';
+}
+
+class WelcomePage extends StatelessWidget {
+  const WelcomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ماهنشان پک',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        fontFamily: 'Roboto',
-        scaffoldBackgroundColor: paper,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: orange,
-          primary: orange,
-          surface: white,
-        ),
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            'assets/images/welcome.png',
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => const Center(
+              child: Icon(Icons.inventory_2_outlined,
+                  size: 120, color: gold),
+            ),
+          ),
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Color(0xCC000000),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            left: 28,
+            right: 28,
+            bottom: 70,
+            child: Column(
+              children: [
+                const Text(
+                  'ماهنشان پک',
+                  style: TextStyle(
+                    color: paleGold,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(color: gold, blurRadius: 18)
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'بسته‌بندی شیک، انتخابی ماندگار',
+                  style: TextStyle(
+                      color: Colors.white70, fontSize: 15),
+                ),
+                const SizedBox(height: 28),
+                GoldButton(
+                  text: 'ورود به فروشگاه',
+                  onPressed: () => Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const StorePage()),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
-      home: const StorePage(),
     );
   }
 }
 
+class GoldButton extends StatelessWidget {
+  final String text;
+  final VoidCallback onPressed;
+
+  const GoldButton({
+    super.key,
+    required this.text,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [
+              paleGold,
+              gold,
+              Color(0xFF8A6428),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x665E4216),
+              blurRadius: 15,
+              offset: Offset(0, 5),
+            ),
+          ],
+        ),
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            foregroundColor: const Color(0xFF211707),
+            shadowColor: Colors.transparent,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+          ),
+          child: Text(
+            text,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+        ),
+      ),
+    );
+  }
+}
 class StorePage extends StatefulWidget {
   const StorePage({super.key});
 
@@ -100,11 +234,13 @@ class _StorePageState extends State<StorePage> {
   String category = 'همه';
   String search = '';
 
-  final Map<int, int> quantities = {};
-  final Map<int, double> prices = {};
-  final searchController = TextEditingController();
+  final TextEditingController searchController =
+      TextEditingController();
 
-  final categories = const [
+  final Map<int, int> quantities = {};
+  final Map<int, int> prices = {};
+
+  final List<String> categories = [
     'همه',
     'جعبه‌ها',
     'سینی‌ها',
@@ -125,41 +261,47 @@ class _StorePageState extends State<StorePage> {
 
   Future<void> loadPrices() async {
     final prefs = await SharedPreferences.getInstance();
-    for (final p in products) {
-      prices[p.id] = prefs.getDouble('price_${p.id}') ?? 0;
-    }
-    if (mounted) setState(() {});
+    if (!mounted) return;
+
+    setState(() {
+      for (final p in products) {
+        prices[p.id] = prefs.getInt('price_${p.id}') ?? 0;
+      }
+    });
   }
+
+  int priceOf(Product p) => prices[p.id] ?? 0;
 
   int get itemCount =>
-      quantities.values.fold(0, (sum, value) => sum + value);
+      quantities.values.fold(0, (a, b) => a + b);
 
-  double get total {
-    double result = 0;
-    quantities.forEach((id, count) {
-      result += (prices[id] ?? 0) * count;
-    });
-    return result;
-  }
+  int get total => quantities.entries.fold(
+        0,
+        (sum, e) =>
+            sum + e.value * (prices[e.key] ?? 0),
+      );
 
-  void changeQuantity(int id, int change) {
+  void changeQuantity(Product p, int delta) {
     setState(() {
-      final next = (quantities[id] ?? 0) + change;
+      final next = (quantities[p.id] ?? 0) + delta;
+
       if (next <= 0) {
-        quantities.remove(id);
+        quantities.remove(p.id);
       } else {
-        quantities[id] = next;
+        quantities[p.id] = next;
       }
     });
   }
 
   List<Product> get filteredProducts {
     return products.where((p) {
-      final matchesCategory =
+      final matchCategory =
           category == 'همه' || p.category == category;
-      final matchesSearch =
-          p.name.toLowerCase().contains(search.toLowerCase());
-      return matchesCategory && matchesSearch;
+
+      final matchSearch = p.name.contains(search) ||
+          p.code.toLowerCase().contains(search.toLowerCase());
+
+      return matchCategory && matchSearch;
     }).toList();
   }
 
@@ -168,56 +310,45 @@ class _StorePageState extends State<StorePage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: paper,
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
-          backgroundColor: ink,
-          foregroundColor: white,
-          elevation: 0,
-          titleSpacing: 18,
-          title: Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: orange,
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: const Icon(
-                  Icons.inventory_2_rounded,
-                  color: white,
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ماهنشان پک',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  Text(
-                    'PACKAGING SOLUTIONS',
-                    style: TextStyle(
-                      fontSize: 8,
-                      letterSpacing: 1.2,
-                      color: Color(0xFFB8C0C5),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          title: const Text(
+            'ماهنشان پک',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: paleGold,
+            ),
           ),
           actions: [
             IconButton(
-              tooltip: 'مدیریت قیمت‌ها',
-              onPressed: openAdmin,
-              icon: const Icon(Icons.settings_outlined),
+              tooltip: 'سبد خرید',
+              onPressed: () => setState(() => tab = 1),
+              icon: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(
+                    Icons.shopping_bag_outlined,
+                    color: gold,
+                  ),
+                  if (itemCount > 0)
+                    Positioned(
+                      top: -7,
+                      left: -8,
+                      child: CircleAvatar(
+                        radius: 9,
+                        backgroundColor: gold,
+                        child: Text(
+                          '$itemCount',
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
-            const SizedBox(width: 8),
           ],
         ),
         body: IndexedStack(
@@ -229,119 +360,82 @@ class _StorePageState extends State<StorePage> {
           ],
         ),
         bottomNavigationBar: NavigationBar(
-          backgroundColor: white,
-          indicatorColor: orange.withOpacity(.15),
+          backgroundColor: const Color(0xEE171513),
+          indicatorColor: const Color(0x553D2D12),
           selectedIndex: tab,
-          onDestinationSelected: (i) => setState(() => tab = i),
-          destinations: [
-            const NavigationDestination(
-              icon: Icon(Icons.grid_view_rounded),
-              selectedIcon: Icon(Icons.grid_view_rounded, color: orange),
-              label: 'محصولات',
+          onDestinationSelected: (v) =>
+              setState(() => tab = v),
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.storefront_outlined),
+              selectedIcon:
+                  Icon(Icons.storefront, color: gold),
+              label: 'فروشگاه',
             ),
             NavigationDestination(
-              icon: const Icon(Icons.shopping_bag_outlined),
+              icon: Icon(Icons.shopping_cart_outlined),
               selectedIcon:
-                  const Icon(Icons.shopping_bag, color: orange),
-              label: itemCount == 0 ? 'سبد سفارش' : 'سبد ($itemCount)',
+                  Icon(Icons.shopping_cart, color: gold),
+              label: 'سبد خرید',
             ),
-            const NavigationDestination(
-              icon: Icon(Icons.headset_mic_outlined),
-              selectedIcon:
-                  Icon(Icons.headset_mic, color: orange),
-              label: 'ارتباط',
+            NavigationDestination(
+              icon: Icon(Icons.phone_outlined),
+              selectedIcon: Icon(Icons.phone, color: gold),
+              label: 'تماس',
             ),
           ],
+        ),
+        floatingActionButton: FloatingActionButton.small(
+          backgroundColor: gold,
+          foregroundColor: Colors.black,
+          onPressed: openAdmin,
+          tooltip: 'مدیریت قیمت‌ها',
+          child: const Icon(Icons.admin_panel_settings),
         ),
       ),
     );
   }
 
   Widget buildHome() {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+    return Column(
       children: [
-        // Industrial hero banner
         Container(
-          height: 190,
+          margin: const EdgeInsets.fromLTRB(14, 8, 14, 12),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: ink,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: ink.withOpacity(.12),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: gold.withOpacity(.65)),
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xEE302416),
+                Color(0xEE12100D),
+              ],
+            ),
           ),
-          child: Stack(
+          child: const Row(
             children: [
-              Positioned(
-                left: -25,
-                top: -35,
-                child: Container(
-                  width: 180,
-                  height: 180,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withOpacity(.07),
-                      width: 24,
-                    ),
-                  ),
-                ),
+              Icon(
+                Icons.workspace_premium,
+                color: paleGold,
+                size: 38,
               ),
-              Positioned(
-                left: 20,
-                bottom: 18,
-                child: Icon(
-                  Icons.inventory_2_rounded,
-                  size: 105,
-                  color: orange.withOpacity(.9),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(20),
+              SizedBox(width: 12),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: orange,
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: const Text(
-                        'MAHNASHAN PACK',
-                        style: TextStyle(
-                          color: white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1,
-                        ),
+                    Text(
+                      'بسته‌بندی حرفه‌ای',
+                      style: TextStyle(
+                        color: paleGold,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const Spacer(),
-                    const Text(
-                      'بسته‌بندی حرفه‌ای،\nامضای کسب‌وکار شما',
-                      style: TextStyle(
-                        color: white,
-                        fontSize: 21,
-                        height: 1.6,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'جعبه و سینی مخصوص رستوران و بیرون‌بر',
-                      style: TextStyle(
-                        color: Color(0xFFBFC7CC),
-                        fontSize: 11,
-                      ),
+                    SizedBox(height: 5),
+                    Text(
+                      'محصولات ماه‌نشان پک را ببینید',
+                      style: TextStyle(color: Colors.white70),
                     ),
                   ],
                 ),
@@ -349,943 +443,440 @@ class _StorePageState extends State<StorePage> {
             ],
           ),
         ),
-        const SizedBox(height: 20),
-
-        // Brand facts
-        Row(
-          children: [
-            Expanded(
-              child: infoTile(
-                Icons.inventory_2_outlined,
-                '۲۲ مدل',
-                'محصول متنوع',
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: TextField(
+            controller: searchController,
+            onChanged: (v) =>
+                setState(() => search = v.trim()),
+            decoration: InputDecoration(
+              hintText: 'جست‌وجوی محصول یا کد کالا',
+              prefixIcon:
+                  const Icon(Icons.search, color: gold),
+              filled: true,
+              fillColor: const Color(0xEE171513),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide:
+                    BorderSide(color: gold.withOpacity(.35)),
               ),
-            ),
-            const SizedBox(width: 9),
-            Expanded(
-              child: infoTile(
-                Icons.storefront_outlined,
-                'فروش عمده',
-                'ثبت سفارش',
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide:
+                    BorderSide(color: gold.withOpacity(.35)),
               ),
-            ),
-            const SizedBox(width: 9),
-            Expanded(
-              child: infoTile(
-                Icons.support_agent,
-                'پشتیبانی',
-                'ارتباط مستقیم',
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-
-        const SectionTitle(
-          title: 'دسته‌بندی محصولات',
-          subtitle: 'انتخاب گروه موردنظر',
-        ),
-        const SizedBox(height: 12),
-
-        Row(
-          children: [
-            categoryBox(
-              'جعبه‌ها',
-              Icons.inventory_2_rounded,
-              const Color(0xFF35434D),
-            ),
-            const SizedBox(width: 9),
-            categoryBox(
-              'سینی‌ها',
-              Icons.dashboard_rounded,
-              const Color(0xFF59666F),
-            ),
-            const SizedBox(width: 9),
-            categoryBox(
-              'آبمیوه و بستنی',
-              Icons.local_cafe_rounded,
-              orange,
-            ),
-          ],
-        ),
-        const SizedBox(height: 25),
-
-        const SectionTitle(
-          title: 'کاتالوگ محصولات',
-          subtitle: 'محصول موردنظر را انتخاب کنید',
-        ),
-        const SizedBox(height: 12),
-
-        TextField(
-          controller: searchController,
-          onChanged: (v) => setState(() => search = v),
-          decoration: InputDecoration(
-            hintText: 'جست‌وجوی نام محصول...',
-            prefixIcon: const Icon(Icons.search, color: muted),
-            filled: true,
-            fillColor: white,
-            contentPadding: const EdgeInsets.symmetric(vertical: 13),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(13),
-              borderSide: const BorderSide(color: line),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(13),
-              borderSide: const BorderSide(color: line),
             ),
           ),
         ),
         const SizedBox(height: 12),
-
         SizedBox(
-          height: 42,
+          height: 43,
           child: ListView(
             scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             children: categories.map((c) {
-              final selected = category == c;
               return Padding(
-                padding: const EdgeInsets.only(left: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 4),
                 child: ChoiceChip(
                   label: Text(c),
-                  selected: selected,
-                  onSelected: (_) => setState(() => category = c),
-                  backgroundColor: white,
-                  selectedColor: ink,
-                  side: BorderSide(
-                    color: selected ? ink : line,
-                  ),
+                  selected: category == c,
+                  onSelected: (_) =>
+                      setState(() => category = c),
+                  selectedColor: gold,
+                  backgroundColor: panel,
                   labelStyle: TextStyle(
-                    color: selected ? white : ink,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                    color: category == c
+                        ? Colors.black
+                        : paleGold,
+                    fontWeight: FontWeight.w600,
                   ),
-                  showCheckmark: false,
+                  side: BorderSide(
+                      color: gold.withOpacity(.5)),
                 ),
               );
             }).toList(),
           ),
         ),
-        const SizedBox(height: 14),
-
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              '${filteredProducts.length} محصول',
-              style: const TextStyle(
-                fontWeight: FontWeight.w900,
-                color: ink,
-              ),
-            ),
-            const Text(
-              'قیمت‌ها به تومان',
-              style: TextStyle(color: muted, fontSize: 11),
-            ),
-          ],
+        const SizedBox(height: 8),
+        Expanded(
+          child: filteredProducts.isEmpty
+              ? const Center(
+                  child: Text('محصولی پیدا نشد'),
+                )
+              : GridView.builder(
+                  padding:
+                      const EdgeInsets.fromLTRB(12, 5, 12, 16),
+                  itemCount: filteredProducts.length,
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: .76,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                  ),
+                  itemBuilder: (_, i) =>
+                      productCard(filteredProducts[i]),
+                ),
         ),
-        const SizedBox(height: 12),
-
-        if (filteredProducts.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(30),
-            child: Center(child: Text('محصولی پیدا نشد')),
-          )
-        else
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: filteredProducts.length,
-            gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 11,
-              mainAxisSpacing: 11,
-              childAspectRatio: .69,
-            ),
-            itemBuilder: (context, index) =>
-                productCard(filteredProducts[index]),
-          ),
       ],
     );
   }
 
-  Widget infoTile(IconData icon, String title, String subtitle) {
+  Widget productCard(Product p) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 5),
       decoration: BoxDecoration(
-        color: white,
-        borderRadius: BorderRadius.circular(13),
-        border: Border.all(color: line),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: orange, size: 22),
-          const SizedBox(height: 7),
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: 11,
-              color: ink,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            subtitle,
-            style: const TextStyle(color: muted, fontSize: 9),
+        color: const Color(0xEE171513),
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: gold.withOpacity(.55)),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black54,
+            blurRadius: 8,
+            offset: Offset(0, 4),
           ),
         ],
       ),
-    );
-  }
-
-  Widget categoryBox(String title, IconData icon, Color color) {
-    return Expanded(
-      child: InkWell(
-        onTap: () => setState(() => category = title),
-        borderRadius: BorderRadius.circular(13),
-        child: Container(
-          height: 92,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(13),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: white, size: 29),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget productCard(Product p) {
-    final price = prices[p.id] ?? 0;
-    final qty = quantities[p.id] ?? 0;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: line),
-      ),
-      clipBehavior: Clip.antiAlias,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: PackageVisual(product: p),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
+              child: p.id == 9
+                  ? Image.asset(
+                      'assets/images/tray_single.png',
+                      fit: BoxFit.contain,
+                      width: double.infinity,
+                      errorBuilder: (_, __, ___) =>
+                          productIcon(p),
+                    )
+                  : productIcon(p),
+            ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(
+              p.name,
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            p.code,
+            style: const TextStyle(
+              color: gold,
+              fontSize: 11,
+            ),
+          ),
+          Text(
+            priceOf(p) == 0
+                ? 'برای قیمت تماس بگیرید'
+                : toman(priceOf(p)),
+            style: const TextStyle(
+              color: paleGold,
+              fontSize: 12,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 5, 8, 8),
+            child: Row(
               children: [
-                Text(
-                  p.code,
-                  style: const TextStyle(
-                    color: orange,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  p.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: ink,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  price == 0
-                      ? 'تماس برای استعلام قیمت'
-                      : '${money(price)} تومان',
-                  style: const TextStyle(
-                    color: muted,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 9),
-                if (qty == 0)
-                  SizedBox(
-                    height: 34,
-                    child: ElevatedButton(
-                      onPressed: () => changeQuantity(p.id, 1),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ink,
-                        foregroundColor: white,
-                        elevation: 0,
-                        padding: EdgeInsets.zero,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.add, size: 15),
-                          SizedBox(width: 4),
-                          Text(
-                            'افزودن به سفارش',
-                            style: TextStyle(fontSize: 10),
-                          ),
-                        ],
-                      ),
+                qtyButton(
+                    Icons.remove, () => changeQuantity(p, -1)),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      '${quantities[p.id] ?? 0}',
+                      style: const TextStyle(
+                          color: Colors.white),
                     ),
-                  )
-                else
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      qtyButton(Icons.remove, () => changeQuantity(p.id, -1)),
-                      Text(
-                        '$qty',
-                        style: const TextStyle(
-                          color: ink,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      qtyButton(Icons.add, () => changeQuantity(p.id, 1)),
-                    ],
                   ),
+                ),
+                qtyButton(
+                    Icons.add, () => changeQuantity(p, 1)),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget productIcon(Product p) {
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFF211C14),
+      child: Icon(p.icon, size: 66, color: gold),
     );
   }
 
   Widget qtyButton(IconData icon, VoidCallback action) {
     return InkWell(
       onTap: action,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(9),
       child: Container(
-        width: 29,
-        height: 29,
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFEEE3),
-          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: gold.withOpacity(.7)),
+          borderRadius: BorderRadius.circular(9),
         ),
-        child: Icon(icon, color: orange, size: 18),
+        child: Icon(icon, size: 18, color: paleGold),
       ),
     );
   }
-
-  Widget buildCart() {
+    Widget buildCart() {
     final selected = products
         .where((p) => (quantities[p.id] ?? 0) > 0)
         .toList();
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    return Column(
       children: [
-        const SectionTitle(
-          title: 'سبد سفارش',
-          subtitle: 'محصولات انتخاب‌شده شما',
-        ),
-        const SizedBox(height: 16),
-        if (selected.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(35),
-            decoration: BoxDecoration(
-              color: white,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Column(
-              children: [
-                Icon(
-                  Icons.shopping_bag_outlined,
-                  size: 60,
-                  color: muted,
-                ),
-                SizedBox(height: 12),
-                Text(
-                  'هنوز محصولی انتخاب نکرده‌اید',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: ink,
+        Expanded(
+          child: selected.isEmpty
+              ? const Center(
+                  child: Text(
+                    'سبد خرید شما خالی است',
+                    style: TextStyle(color: paleGold),
                   ),
-                ),
-                SizedBox(height: 6),
-                Text(
-                  'از بخش محصولات، کالاهای موردنظر را اضافه کنید.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: muted, fontSize: 12),
-                ),
-              ],
-            ),
-          )
-        else ...[
-          ...selected.map((p) {
-            final qty = quantities[p.id] ?? 0;
-            final price = prices[p.id] ?? 0;
-            return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(13),
-              decoration: BoxDecoration(
-                color: white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: line),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: ink,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(p.icon, color: orange),
-                  ),
-                  const SizedBox(width: 11),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: selected.length,
+                  itemBuilder: (_, i) {
+                    final p = selected[i];
+
+                    return Card(
+                      color: const Color(0xEE171513),
+                      shape: RoundedRectangleBorder(
+                        side: BorderSide(
+                            color: gold.withOpacity(.45)),
+                        borderRadius:
+                            BorderRadius.circular(13),
+                      ),
+                      child: ListTile(
+                        leading: Icon(
+                          p.icon,
+                          color: gold,
+                          size: 30,
+                        ),
+                        title: Text(
                           p.name,
                           style: const TextStyle(
-                            color: ink,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
+                              color: Colors.white),
                         ),
-                        const SizedBox(height: 5),
-                        Text(
-                          price == 0
-                              ? 'استعلام قیمت'
-                              : '${money(price * qty)} تومان',
+                        subtitle: Text(
+                          '${quantities[p.id]} عدد • '
+                          '${priceOf(p) == 0 ? 'قیمت نامشخص' : toman(priceOf(p) * quantities[p.id]!)}',
                           style: const TextStyle(
-                            color: muted,
-                            fontSize: 11,
-                          ),
+                              color: paleGold),
                         ),
-                      ],
-                    ),
-                  ),
-                  qtyButton(Icons.remove, () => changeQuantity(p.id, -1)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 9),
-                    child: Text(
-                      '$qty',
-                      style: const TextStyle(
-                        color: ink,
-                        fontWeight: FontWeight.w900,
+                        trailing: IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: gold,
+                          ),
+                          onPressed: () => setState(
+                              () => quantities.remove(p.id)),
+                        ),
                       ),
-                    ),
-                  ),
-                  qtyButton(Icons.add, () => changeQuantity(p.id, 1)),
-                ],
-              ),
-            );
-          }),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: ink,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: [
-                const Text(
-                  'مبلغ کل سفارش',
-                  style: TextStyle(color: Colors.white70),
+                    );
+                  },
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  '${money(total)} تومان',
-                  style: const TextStyle(
-                    color: white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                SizedBox(
-                  width: double.infinity,
-                  height: 46,
-                  child: ElevatedButton.icon(
-                    onPressed: copyOrder,
-                    icon: const Icon(Icons.copy),
-                    label: const Text('کپی متن سفارش'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: orange,
-                      foregroundColor: white,
-                    ),
-                  ),
-                ),
-              ],
+        ),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            color: Color(0xEE171513),
+            border: Border(
+              top: BorderSide(color: gold),
             ),
           ),
-        ],
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment:
+                    MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'جمع کل',
+                    style: TextStyle(
+                        color: paleGold, fontSize: 16),
+                  ),
+                  Text(
+                    toman(total),
+                    style: const TextStyle(
+                      color: paleGold,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 17,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              GoldButton(
+                text: 'کپی متن سفارش',
+                onPressed: copyOrder,
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 
   Future<void> copyOrder() async {
-    final buffer = StringBuffer();
-    buffer.writeln('سفارش از ماهنشان پک');
-    buffer.writeln('----------------------');
+    final selected = products
+        .where((p) => (quantities[p.id] ?? 0) > 0)
+        .toList();
 
-    for (final p in products) {
-      final qty = quantities[p.id] ?? 0;
-      if (qty > 0) {
-        final price = prices[p.id] ?? 0;
-        buffer.writeln(
-          '${p.name} : $qty عدد | ${money(price * qty)} تومان',
-        );
-      }
-    }
-
-    buffer.writeln('----------------------');
-    buffer.writeln('مبلغ کل: ${money(total)} تومان');
-    buffer.writeln('شماره تماس: 09388462634');
-
-    await Clipboard.setData(ClipboardData(text: buffer.toString()));
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('متن سفارش کپی شد.')),
-    );
-  }
-
-  Widget buildContact() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Container(
-          padding: const EdgeInsets.all(25),
-          decoration: BoxDecoration(
-            color: ink,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Column(
-            children: [
-              Icon(Icons.support_agent, color: orange, size: 65),
-              SizedBox(height: 14),
-              Text(
-                'ارتباط با ماهنشان پک',
-                style: TextStyle(
-                  color: white,
-                  fontSize: 21,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              SizedBox(height: 10),
-              Text(
-                'برای ثبت سفارش، استعلام قیمت و دریافت اطلاعات محصولات با ما در ارتباط باشید.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white70,
-                  height: 1.8,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: line),
-          ),
-          child: const Column(
-            children: [
-              Icon(Icons.phone_in_talk, color: orange, size: 32),
-              SizedBox(height: 10),
-              Text(
-                'شماره تماس',
-                style: TextStyle(color: muted),
-              ),
-              SizedBox(height: 6),
-              SelectableText(
-                '09388462634',
-                style: TextStyle(
-                  color: ink,
-                  fontSize: 23,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> openAdmin() async {
-    final controller = TextEditingController();
-
-    final pin = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('ورود مدیریت'),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          obscureText: true,
-          decoration: const InputDecoration(
-            labelText: 'رمز مدیریت',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('لغو'),
-          ),
-          ElevatedButton(
-            onPressed: () =>
-                Navigator.pop(dialogContext, controller.text),
-            child: const Text('ورود'),
-          ),
-        ],
-      ),
-    );
-
-    controller.dispose();
-
-    if (!mounted || pin == null) return;
-
-    if (pin != '1234') {
+    if (selected.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('رمز مدیریت اشتباه است.')),
+        const SnackBar(
+            content: Text('سبد خرید خالی است')),
       );
       return;
     }
 
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => AdminPage(
-          onSave: (id, price) async {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setDouble('price_$id', price);
-            if (mounted) {
-              setState(() => prices[id] = price);
-            }
-          },
-        ),
-      ),
+    final lines = selected
+        .map((p) =>
+            '${p.name} (${p.code}) - ${quantities[p.id]} عدد - '
+            '${priceOf(p) == 0 ? 'استعلام قیمت' : toman(priceOf(p) * quantities[p.id]!)}')
+        .join('\n');
+
+    final orderText =
+        'سفارش از ماهنشان پک\n$lines\n'
+        'جمع کل: ${toman(total)}\n'
+        'شماره تماس: 09388462634';
+
+    await Clipboard.setData(
+        ClipboardData(text: orderText));
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+          content: Text('متن سفارش کپی شد')),
     );
-
-    if (mounted) loadPrices();
   }
-}
 
-class SectionTitle extends StatelessWidget {
-  final String title;
-  final String subtitle;
-
-  const SectionTitle({
-    super.key,
-    required this.title,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 4,
-          height: 38,
-          decoration: BoxDecoration(
-            color: orange,
-            borderRadius: BorderRadius.circular(4),
-          ),
+  Widget buildContact() {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.all(22),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: const Color(0xEE171513),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: gold),
         ),
-        const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
+            Icon(
+              Icons.support_agent,
+              color: gold,
+              size: 64,
+            ),
+            SizedBox(height: 14),
             Text(
-              title,
-              style: const TextStyle(
-                color: ink,
-                fontSize: 17,
-                fontWeight: FontWeight.w900,
+              'ارتباط با ماهنشان پک',
+              style: TextStyle(
+                color: paleGold,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 3),
+            SizedBox(height: 12),
             Text(
-              subtitle,
-              style: const TextStyle(
-                color: muted,
-                fontSize: 10,
+              '09388462634',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
               ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'برای ثبت سفارش و دریافت قیمت تماس بگیرید',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70),
             ),
           ],
         ),
-      ],
-    );
-  }
-}
-
-// Individual graphic illustration for product categories
-class PackageVisual extends StatelessWidget {
-  final Product product;
-
-  const PackageVisual({super.key, required this.product});
-
-  @override
-  Widget build(BuildContext context) {
-    final isBox = product.category == 'جعبه‌ها';
-    final isCup = product.category == 'آبمیوه و بستنی';
-
-    final background = isBox
-        ? const Color(0xFFE8ECEE)
-        : isCup
-            ? const Color(0xFFFFE9DC)
-            : const Color(0xFFE5E9EB);
-
-    return Container(
-      color: background,
-      child: Stack(
-        children: [
-          Positioned(
-            top: 10,
-            right: 10,
-            child: Text(
-              product.code,
-              style: const TextStyle(
-                color: Color(0xFF89939A),
-                fontSize: 8,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1,
-              ),
-            ),
-          ),
-          Center(
-            child: CustomPaint(
-              size: const Size(125, 105),
-              painter: PackagePainter(
-                id: product.id,
-                isBox: isBox,
-                isCup: isCup,
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 8,
-            left: 9,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 7,
-                vertical: 4,
-              ),
-              decoration: BoxDecoration(
-                color: ink,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const Text(
-                'MAHNASHAN',
-                style: TextStyle(
-                  color: white,
-                  fontSize: 7,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: .7,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
-}
 
-class PackagePainter extends CustomPainter {
-  final int id;
-  final bool isBox;
-  final bool isCup;
+  Future<void> openAdmin() async {
+    final pinController = TextEditingController();
 
-  PackagePainter({
-    required this.id,
-    required this.isBox,
-    required this.isCup,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-
-    final body = Paint()..color = const Color(0xFFC18C5C);
-    final top = Paint()..color = const Color(0xFFE0B783);
-    final dark = Paint()..color = const Color(0xFF91623D);
-    final stroke = Paint()
-      ..color = const Color(0xFF795333)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-
-    final shadow = Paint()..color = const Color(0x26000000);
-
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(w / 2, h * .83),
-        width: w * .75,
-        height: h * .13,
-      ),
-      shadow,
-    );
-
-    if (isBox) {
-      final front = Path()
-        ..moveTo(w * .20, h * .38)
-        ..lineTo(w * .80, h * .38)
-        ..lineTo(w * .75, h * .78)
-        ..lineTo(w * .25, h * .78)
-        ..close();
-
-      final lid = Path()
-        ..moveTo(w * .20, h * .38)
-        ..lineTo(w * .50, h * .19)
-        ..lineTo(w * .80, h * .38)
-        ..lineTo(w * .50, h * .55)
-        ..close();
-
-      canvas.drawPath(front, body);
-      canvas.drawPath(lid, top);
-      canvas.drawPath(lid, stroke);
-
-      final side = Path()
-        ..moveTo(w * .50, h * .55)
-        ..lineTo(w * .80, h * .38)
-        ..lineTo(w * .75, h * .78)
-        ..lineTo(w * .50, h * .87)
-        ..close();
-
-      canvas.drawPath(side, dark);
-      canvas.drawPath(front, stroke);
-
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(
-            center: Offset(w * .48, h * .62),
-            width: w * .24,
-            height: h * .12,
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: panel,
+          title: const Text(
+            'ورود مدیریت',
+            style: TextStyle(color: paleGold),
           ),
-          const Radius.circular(4),
+          content: TextField(
+            controller: pinController,
+            obscureText: true,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+                hintText: 'رمز عبور'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () =>
+                  Navigator.pop(ctx, false),
+              child: const Text('انصراف'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(
+                  ctx, pinController.text == '1234'),
+              child: const Text('ورود'),
+            ),
+          ],
         ),
-        Paint()..color = orange,
+      ),
+    );
+
+    pinController.dispose();
+
+    if (ok == true && mounted) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AdminPage(
+            initialPrices: Map<int, int>.from(prices),
+            onSave: (newPrices) {
+              setState(() => prices.addAll(newPrices));
+            },
+          ),
+        ),
       );
-    } else if (isCup) {
-      for (int i = 0; i < (id == 17 || id == 19 ? 4 : 2); i++) {
-        final count = id == 17 || id == 19 ? 4 : 2;
-        final x = count == 2
-            ? w * (.38 + i * .24)
-            : w * (.28 + (i % 2) * .38);
-        final y = count == 2
-            ? h * .50
-            : h * (.40 + (i ~/ 2) * .27);
-
-        canvas.drawCircle(
-          Offset(x, y),
-          w * .12,
-          dark,
-        );
-        canvas.drawCircle(
-          Offset(x, y),
-          w * .09,
-          top,
-        );
-        canvas.drawCircle(
-          Offset(x, y),
-          w * .06,
-          Paint()..color = orange,
-        );
-      }
-
-      final base = Path()
-        ..moveTo(w * .16, h * .29)
-        ..lineTo(w * .84, h * .29)
-        ..lineTo(w * .78, h * .78)
-        ..lineTo(w * .22, h * .78)
-        ..close();
-
-      canvas.drawPath(base, body);
-      canvas.drawPath(base, stroke);
-    } else {
-      final tray = RRect.fromRectAndRadius(
-        Rect.fromLTWH(w * .12, h * .27, w * .76, h * .48),
-        const Radius.circular(12),
-      );
-
-      canvas.drawRRect(tray, dark);
-
-      final inner = RRect.fromRectAndRadius(
-        Rect.fromLTWH(w * .17, h * .32, w * .66, h * .38),
-        const Radius.circular(9),
-      );
-
-      canvas.drawRRect(inner, top);
-      canvas.drawRRect(inner, stroke);
-
-      final divisions = id == 12 || id == 13 || id == 11;
-      if (divisions) {
-        canvas.drawLine(
-          Offset(w * .50, h * .34),
-          Offset(w * .50, h * .68),
-          stroke,
-        );
-        canvas.drawLine(
-          Offset(w * .18, h * .51),
-          Offset(w * .82, h * .51),
-          stroke,
-        );
-      }
-
-      for (int i = 0; i < 3; i++) {
-        canvas.drawCircle(
-          Offset(w * (.32 + i * .18), h * .50),
-          w * .055,
-          Paint()
-            ..color = [
-              const Color(0xFFB94B2E),
-              const Color(0xFF6D8B43),
-              const Color(0xFFE3A33C),
-            ][(i + id) % 3],
-        );
-      }
     }
-  }
-
-  @override
-  bool shouldRepaint(covariant PackagePainter oldDelegate) {
-    return oldDelegate.id != id;
   }
 }
 
 class AdminPage extends StatefulWidget {
-  final Future<void> Function(int, double) onSave;
+  final Map<int, int> initialPrices;
+  final ValueChanged<Map<int, int>> onSave;
 
-  const AdminPage({super.key, required this.onSave});
+  const AdminPage({
+    super.key,
+    required this.initialPrices,
+    required this.onSave,
+  });
 
   @override
   State<AdminPage> createState() => _AdminPageState();
@@ -1297,20 +888,15 @@ class _AdminPageState extends State<AdminPage> {
   @override
   void initState() {
     super.initState();
+
     controllers = {
       for (final p in products)
-        p.id: TextEditingController(),
+        p.id: TextEditingController(
+          text: (widget.initialPrices[p.id] ?? 0) == 0
+              ? ''
+              : '${widget.initialPrices[p.id]}',
+        ),
     };
-    loadCurrentPrices();
-  }
-
-  Future<void> loadCurrentPrices() async {
-    final prefs = await SharedPreferences.getInstance();
-    for (final p in products) {
-      controllers[p.id]!.text =
-          (prefs.getDouble('price_${p.id}') ?? 0).toStringAsFixed(0);
-    }
-    if (mounted) setState(() {});
   }
 
   @override
@@ -1321,89 +907,100 @@ class _AdminPageState extends State<AdminPage> {
     super.dispose();
   }
 
+  Future<void> save() async {
+    final prefs = await SharedPreferences.getInstance();
+    final values = <int, int>{};
+
+    for (final p in products) {
+      final value = int.tryParse(
+            controllers[p.id]!
+                .text
+                .replaceAll(',', '')
+                .trim(),
+          ) ??
+          0;
+
+      values[p.id] = value;
+
+      await prefs.setInt(
+          'price_${p.id}', value);
+    }
+
+    widget.onSave(values);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+          content: Text('قیمت‌ها ذخیره شدند')),
+    );
+
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: paper,
+        backgroundColor: Colors.transparent,
         appBar: AppBar(
-          backgroundColor: ink,
-          foregroundColor: white,
           title: const Text('مدیریت قیمت محصولات'),
         ),
-        body: ListView.builder(
-          padding: const EdgeInsets.all(14),
-          itemCount: products.length,
-          itemBuilder: (context, index) {
-            final p = products[index];
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 10),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: white,
-                borderRadius: BorderRadius.circular(13),
-                border: Border.all(color: line),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${p.code}  |  ${p.name}',
-                    style: const TextStyle(
-                      color: ink,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: controllers[p.id],
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'قیمت به تومان',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.payments_outlined),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ink,
-                        foregroundColor: white,
+        body: ListView(
+          padding: const EdgeInsets.all(12),
+          children: [
+            const Text(
+              'قیمت هر محصول را به تومان وارد کنید؛ '
+              'برای استعلام قیمت، کادر را خالی بگذارید.',
+              style: TextStyle(color: paleGold),
+            ),
+            const SizedBox(height: 12),
+            ...products.map(
+              (p) => Card(
+                color: const Color(0xEE171513),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          p.name,
+                          style: const TextStyle(
+                              color: Colors.white),
+                        ),
                       ),
-                      onPressed: () async {
-                        final value = double.tryParse(
-                          controllers[p.id]!.text.trim(),
-                        );
-
-                        if (value == null || value < 0) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('قیمت معتبر وارد کنید.'),
-                            ),
-                          );
-                          return;
-                        }
-
-                        await widget.onSave(p.id, value);
-
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('قیمت ذخیره شد.'),
+                      const SizedBox(width: 10),
+                      SizedBox(
+                        width: 125,
+                        child: TextField(
+                          controller: controllers[p.id],
+                          keyboardType:
+                              TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter
+                                .digitsOnly,
+                          ],
+                          textAlign: TextAlign.center,
+                          decoration:
+                              const InputDecoration(
+                            hintText: 'تومان',
+                            isDense: true,
                           ),
-                        );
-                      },
-                      child: const Text('ذخیره قیمت'),
-                    ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            );
-          },
+            ),
+            const SizedBox(height: 16),
+            GoldButton(
+              text: 'ذخیره همه قیمت‌ها',
+              onPressed: save,
+            ),
+            const SizedBox(height: 25),
+          ],
         ),
       ),
     );
