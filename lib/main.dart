@@ -1,5 +1,4 @@
 
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,6 +10,8 @@ void main() {
 const Color gold = Color(0xFFD4AF37);
 const Color dark = Color(0xFF111111);
 const Color cardColor = Color(0xFF202020);
+
+const String phoneNumber = '09388462634';
 
 class Product {
   final String name;
@@ -50,7 +51,7 @@ class MahnashanApp extends StatelessWidget {
   }
 }
 
-// صفحه شروع برنامه
+// صفحه شروع
 class SplashPage extends StatelessWidget {
   const SplashPage({super.key});
 
@@ -83,15 +84,12 @@ class SplashPage extends StatelessWidget {
           child: Column(
             children: [
               const Spacer(),
-
               const Icon(
                 Icons.workspace_premium,
                 color: gold,
                 size: 75,
               ),
-
               const SizedBox(height: 12),
-
               const Text(
                 'ماهنشان پک',
                 style: TextStyle(
@@ -100,9 +98,7 @@ class SplashPage extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 8),
-
               const Text(
                 'بسته‌بندی خاص، کیفیت ماندگار',
                 style: TextStyle(
@@ -110,9 +106,7 @@ class SplashPage extends StatelessWidget {
                   fontSize: 15,
                 ),
               ),
-
               const SizedBox(height: 35),
-
               Row(
                 children: [
                   Expanded(
@@ -137,9 +131,7 @@ class SplashPage extends StatelessWidget {
                   ),
                 ],
               ),
-
               const SizedBox(height: 25),
-
               const Text(
                 'کاتالوگ محصولات و بسته‌بندی‌های غذایی',
                 textAlign: TextAlign.center,
@@ -148,9 +140,7 @@ class SplashPage extends StatelessWidget {
                   fontSize: 16,
                 ),
               ),
-
               const Spacer(),
-
               SizedBox(
                 width: double.infinity,
                 height: 58,
@@ -179,9 +169,7 @@ class SplashPage extends StatelessWidget {
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
-
               const Text(
                 'MAHNASHAN PACK',
                 style: TextStyle(
@@ -198,7 +186,7 @@ class SplashPage extends StatelessWidget {
   }
 }
 
-// صفحه اصلی کاتالوگ
+// صفحه اصلی
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -243,6 +231,7 @@ class _HomePageState extends State<HomePage> {
 
   String selectedCategory = 'همه';
   bool loading = true;
+  int currentTab = 0;
 
   @override
   void initState() {
@@ -293,6 +282,10 @@ class _HomePageState extends State<HomePage> {
         .toList();
   }
 
+  List<Product> get selectedProducts {
+    return products.where((p) => p.quantity > 0).toList();
+  }
+
   String money(int value) {
     return value.toString().replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
@@ -307,6 +300,71 @@ class _HomePageState extends State<HomePage> {
         product.quantity = 0;
       }
     });
+  }
+
+  // پنجره ورود تعداد دلخواه
+  void enterQuantity(Product product) {
+    final controller = TextEditingController(
+      text: product.quantity == 0
+          ? ''
+          : product.quantity.toString(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: cardColor,
+        title: Text(
+          product.name,
+          style: const TextStyle(
+            color: gold,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+          ],
+          decoration: const InputDecoration(
+            labelText: 'تعداد موردنظر',
+            hintText: 'مثلاً 2000',
+            suffixText: 'عدد',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('انصراف'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: gold,
+              foregroundColor: Colors.black,
+            ),
+            onPressed: () {
+              final value = int.tryParse(controller.text);
+
+              if (value != null && value >= 0) {
+                setState(() {
+                  product.quantity = value;
+                });
+                Navigator.pop(dialogContext);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('لطفاً تعداد معتبر وارد کنید'),
+                  ),
+                );
+              }
+            },
+            child: const Text('ثبت تعداد'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> openAdmin() async {
@@ -362,113 +420,46 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void showCart() {
-    final selected = products.where((p) => p.quantity > 0).toList();
+  Future<void> copyOrder() async {
+    final selected = selectedProducts;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: cardColor,
-      builder: (sheetContext) => Padding(
-        padding: const EdgeInsets.all(18),
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'سبد خرید',
-                style: TextStyle(
-                  color: gold,
-                  fontSize: 23,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 15),
+    if (selected.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('سبد خرید شما خالی است'),
+        ),
+      );
+      return;
+    }
 
-              if (selected.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Text('سبد خرید شما خالی است'),
-                ),
+    final text = StringBuffer();
 
-              ...selected.map(
-                (p) => ListTile(
-                  title: Text(p.name),
-                  subtitle: Text(
-                    '${p.quantity} عدد × ${money(p.price)} تومان',
-                  ),
-                  trailing: Text(
-                    '${money(p.price * p.quantity)} تومان',
-                    style: const TextStyle(color: gold),
-                  ),
-                ),
-              ),
+    text.writeln('سلام، سفارش من از ماهنشان پک:');
+    text.writeln();
 
-              const Divider(color: gold),
+    for (final p in selected) {
+      text.writeln(
+        '${p.name} - تعداد: ${p.quantity} - قیمت: ${money(p.price * p.quantity)} تومان',
+      );
+    }
 
-              Text(
-                'مبلغ کل: ${money(total)} تومان',
-                style: const TextStyle(
-                  color: gold,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+    text.writeln();
+    text.writeln('مبلغ کل: ${money(total)} تومان');
+    text.writeln('شماره تماس: $phoneNumber');
 
-              const SizedBox(height: 15),
+    await Clipboard.setData(
+      ClipboardData(text: text.toString()),
+    );
 
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.copy),
-                  label: const Text('کپی متن سفارش برای واتساپ'),
-                  onPressed: selected.isEmpty
-                      ? null
-                      : () async {
-                          final text = StringBuffer();
-
-                          text.writeln('سلام، سفارش من از ماهنشان پک:');
-                          text.writeln();
-
-                          for (final p in selected) {
-                            text.writeln(
-                              '${p.name} - تعداد: ${p.quantity} - قیمت: ${money(p.price * p.quantity)} تومان',
-                            );
-                          }
-
-                          text.writeln();
-                          text.writeln(
-                            'مبلغ کل: ${money(total)} تومان',
-                          );
-                          text.writeln('شماره تماس: 09388462634');
-
-                          await Clipboard.setData(
-                            ClipboardData(text: text.toString()),
-                          );
-
-                          if (sheetContext.mounted) {
-                            Navigator.pop(sheetContext);
-                          }
-
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'متن سفارش کپی شد؛ آن را در واتساپ ارسال کنید.',
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                ),
-              ),
-
-              const SizedBox(height: 8),
-            ],
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'متن سفارش کپی شد؛ آن را در واتساپ ارسال کنید.',
           ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   Widget quantityButton(IconData icon, VoidCallback onTap) {
@@ -476,7 +467,7 @@ class _HomePageState extends State<HomePage> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(30),
       child: Container(
-        padding: const EdgeInsets.all(5),
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
           color: gold,
           borderRadius: BorderRadius.circular(30),
@@ -485,6 +476,412 @@ class _HomePageState extends State<HomePage> {
           icon,
           color: Colors.black,
           size: 18,
+        ),
+      ),
+    );
+  }
+
+  // کارت محصول
+  Widget productCard(Product product) {
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: gold.withValues(alpha: 0.6),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: gold.withValues(alpha: 0.08),
+            blurRadius: 8,
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Center(
+              child: Icon(
+                product.icon,
+                color: gold,
+                size: 58,
+              ),
+            ),
+          ),
+          Text(
+            product.name,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            product.price == 0
+                ? 'قیمت: تماس بگیرید'
+                : '${money(product.price)} تومان',
+            style: const TextStyle(
+              color: gold,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 7),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              quantityButton(
+                Icons.remove,
+                () => changeQuantity(product, -1),
+              ),
+              InkWell(
+                onTap: () => enterQuantity(product),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  constraints: const BoxConstraints(minWidth: 45),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 5,
+                  ),
+                  child: Text(
+                    '${product.quantity}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      color: gold,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              quantityButton(
+                Icons.add,
+                () => enterQuantity(product),
+              ),
+            ],
+          ),
+          const SizedBox(height: 3),
+          const Text(
+            'برای وارد کردن تعداد بزنید',
+            style: TextStyle(
+              color: Colors.white54,
+              fontSize: 9,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // صفحه خانه و کاتالوگ
+  Widget homeContent() {
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFF3B3015),
+                Color(0xFF17130A),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: gold, width: 1.3),
+          ),
+          child: const Column(
+            children: [
+              Icon(
+                Icons.workspace_premium,
+                color: gold,
+                size: 42,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'بسته‌بندی خاص، کیفیت ماندگار',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: gold,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 5),
+              Text(
+                'کاتالوگ محصولات ماهنشان پک',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 48,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            children: categories.map((category) {
+              final selected = selectedCategory == category;
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: ChoiceChip(
+                  label: Text(category),
+                  selected: selected,
+                  selectedColor: gold,
+                  backgroundColor: cardColor,
+                  labelStyle: TextStyle(
+                    color: selected ? Colors.black : Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  onSelected: (_) {
+                    setState(() {
+                      selectedCategory = category;
+                    });
+                  },
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.all(12),
+            gridDelegate:
+                const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.78,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemCount: visibleProducts.length,
+            itemBuilder: (context, index) {
+              return productCard(visibleProducts[index]);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // صفحه سبد خرید
+  Widget cartContent() {
+    final selected = selectedProducts;
+
+    if (selected.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.shopping_cart_outlined,
+              color: gold,
+              size: 75,
+            ),
+            SizedBox(height: 15),
+            Text(
+              'سبد خرید شما خالی است',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 18,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'از قسمت خانه محصولات را انتخاب کنید',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        const Padding(
+          padding: EdgeInsets.all(16),
+          child: Text(
+            'سبد خرید شما',
+            style: TextStyle(
+              color: gold,
+              fontSize: 23,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: selected.length,
+            itemBuilder: (context, index) {
+              final product = selected[index];
+
+              return Card(
+                color: cardColor,
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 5,
+                ),
+                child: ListTile(
+                  leading: const Icon(
+                    Icons.inventory_2,
+                    color: gold,
+                  ),
+                  title: Text(product.name),
+                  subtitle: Text(
+                    '${product.quantity} عدد × ${money(product.price)} تومان',
+                  ),
+                  trailing: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${money(product.price * product.quantity)} تومان',
+                        style: const TextStyle(
+                          color: gold,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () => enterQuantity(product),
+                        child: const Text(
+                          'ویرایش تعداد',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            border: Border(
+              top: BorderSide(color: gold),
+            ),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'تعداد کل: $itemCount عدد',
+                style: const TextStyle(color: Colors.white70),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                'مبلغ کل: ${money(total)} تومان',
+                style: const TextStyle(
+                  color: gold,
+                  fontSize: 21,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: copyOrder,
+                  icon: const Icon(Icons.copy),
+                  label: const Text('کپی سفارش برای واتساپ'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: gold,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.all(14),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // صفحه ارتباط با ما
+  Widget contactContent() {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(25),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: gold),
+          ),
+          child: Column(
+            children: [
+              const Icon(
+                Icons.support_agent,
+                color: gold,
+                size: 80,
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'ارتباط با ماهنشان پک',
+                style: TextStyle(
+                  color: gold,
+                  fontSize: 23,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'برای اطلاع از قیمت‌ها، ثبت سفارش و دریافت راهنمایی با ما تماس بگیرید.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 15,
+                  height: 1.8,
+                ),
+              ),
+              const SizedBox(height: 25),
+              const Text(
+                phoneNumber,
+                style: TextStyle(
+                  color: gold,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    await Clipboard.setData(
+                      const ClipboardData(text: phoneNumber),
+                    );
+
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('شماره تماس کپی شد'),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.copy),
+                  label: const Text('کپی شماره تماس'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: gold,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.all(14),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -523,225 +920,45 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-
-      body: Column(
+      body: IndexedStack(
+        index: currentTab,
         children: [
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.all(14),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFF3B3015),
-                  Color(0xFF17130A),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: gold, width: 1.3),
-            ),
-            child: const Column(
-              children: [
-                Icon(
-                  Icons.workspace_premium,
-                  color: gold,
-                  size: 42,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'بسته‌بندی خاص، کیفیت ماندگار',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: gold,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  'کاتالوگ محصولات ماهنشان پک',
-                  style: TextStyle(color: Colors.white70),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(
-            height: 48,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              children: categories.map((category) {
-                final selected = selectedCategory == category;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: ChoiceChip(
-                    label: Text(category),
-                    selected: selected,
-                    selectedColor: gold,
-                    backgroundColor: cardColor,
-                    labelStyle: TextStyle(
-                      color: selected ? Colors.black : Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    onSelected: (_) {
-                      setState(() {
-                        selectedCategory = category;
-                      });
-                    },
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(12),
-              gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.78,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: visibleProducts.length,
-              itemBuilder: (context, index) {
-                final product = visibleProducts[index];
-
-                return Container(
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: gold.withValues(alpha: 0.6),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: gold.withValues(alpha: 0.08),
-                        blurRadius: 8,
-                      ),
-                    ],
-                  ),
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Center(
-                          child: Icon(
-                            product.icon,
-                            color: gold,
-                            size: 58,
-                          ),
-                        ),
-                      ),
-
-                      Text(
-                        product.name,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-
-                      const SizedBox(height: 6),
-
-                      Text(
-                        product.price == 0
-                            ? 'قیمت: تماس بگیرید'
-                            : '${money(product.price)} تومان',
-                        style: const TextStyle(
-                          color: gold,
-                          fontSize: 12,
-                        ),
-                      ),
-
-                      const SizedBox(height: 7),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          quantityButton(
-                            Icons.remove,
-                            () => changeQuantity(product, -1),
-                          ),
-
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                            ),
-                            child: Text(
-                              '${product.quantity}',
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-
-                          quantityButton(
-                            Icons.add,
-                            () => changeQuantity(product, 1),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
+          homeContent(),
+          cartContent(),
+          contactContent(),
         ],
       ),
-
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(12),
         decoration: const BoxDecoration(
           color: Colors.black,
           border: Border(
-            top: BorderSide(color: gold),
+            top: BorderSide(color: gold, width: 1),
           ),
         ),
         child: SafeArea(
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('تعداد: $itemCount محصول'),
-                    Text(
-                      '${money(total)} تومان',
-                      style: const TextStyle(
-                        color: gold,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 17,
-                      ),
-                    ),
-                  ],
-                ),
+          child: BottomNavigationBar(
+            currentIndex: currentTab,
+            onTap: (index) {
+              setState(() {
+                currentTab = index;
+              });
+            },
+            backgroundColor: Colors.black,
+            selectedItemColor: gold,
+            unselectedItemColor: Colors.white60,
+            type: BottomNavigationBarType.fixed,
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'خانه',
               ),
-
-              ElevatedButton.icon(
-                onPressed: showCart,
-                icon: const Icon(Icons.shopping_cart),
-                label: const Text('سبد خرید'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: gold,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 13,
-                  ),
-                ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.shopping_cart),
+                label: 'سبد خرید',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.phone),
+                label: 'ارتباط با ما',
               ),
             ],
           ),
@@ -781,7 +998,7 @@ class _AdminPageState extends State<AdminPage> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: cardColor,
         title: Text(
           widget.products[index].name,
@@ -790,27 +1007,28 @@ class _AdminPageState extends State<AdminPage> {
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+          ],
           decoration: const InputDecoration(
             labelText: 'قیمت به تومان',
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('انصراف'),
           ),
           ElevatedButton(
             onPressed: () async {
-              final price = int.tryParse(
-                controller.text.replaceAll(',', ''),
-              );
+              final price = int.tryParse(controller.text);
 
               if (price != null && price >= 0) {
                 await widget.onSave(index, price);
 
                 if (mounted) {
                   setState(() {});
-                  Navigator.pop(context);
+                  Navigator.pop(dialogContext);
                 }
               }
             },
@@ -831,7 +1049,6 @@ class _AdminPageState extends State<AdminPage> {
         ),
         backgroundColor: Colors.black,
       ),
-
       body: ListView.builder(
         itemCount: widget.products.length,
         itemBuilder: (context, index) {
