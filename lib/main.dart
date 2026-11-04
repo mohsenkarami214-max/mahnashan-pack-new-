@@ -316,7 +316,7 @@ class _StorePageState extends State<StorePage> {
           fit: StackFit.expand,
           children: [
             Image.asset(
-              'assets/images/background.png',
+              'background.png',
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) =>
                   Container(color: bg),
